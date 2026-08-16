@@ -3,163 +3,50 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Gore Street Capital">
-  <title>Gore Street Capital</title>
+  <meta name="robots" content="noindex, nofollow">
+  <title>Website coming soon</title>
 
   <style>
-    :root {
-      --bg: #f4f2ed;
-      --ink: #171717;
-      --muted: #6b6964;
-      --line: #d8d4cc;
-      --paper: #faf9f6;
-      --max: 1120px;
+    * {
+      box-sizing: border-box;
     }
-
-    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.5;
-    }
-
-    .page {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header, main, footer {
-      width: min(calc(100% - 40px), var(--max));
-      margin: 0 auto;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 28px 0;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .brand {
-      font-size: 1rem;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-    }
-
-    .domain {
-      color: var(--muted);
-      font-size: .9rem;
-    }
-
-    main {
-      flex: 1;
       display: grid;
       place-items: center;
-      padding: 80px 0;
+      padding: 24px;
+      background: #f4f2ed;
+      color: #171717;
+      font-family: Georgia, "Times New Roman", serif;
     }
 
-    .hero {
-      width: 100%;
-      max-width: 900px;
-    }
-
-    .kicker {
-      color: var(--muted);
-      font-size: .9rem;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      margin-bottom: 22px;
+    .coming-soon {
+      text-align: center;
     }
 
     h1 {
       margin: 0;
-      max-width: 850px;
-      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(3rem, 9vw, 7rem);
       font-weight: 400;
-      font-size: clamp(3.5rem, 9vw, 7.8rem);
-      line-height: .92;
-      letter-spacing: -.055em;
+      line-height: 0.95;
+      letter-spacing: -0.05em;
     }
 
-    .rule {
-      width: 100%;
-      height: 1px;
-      background: var(--line);
-      margin: 42px 0 28px;
-    }
-
-    .intro {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 50px;
-      max-width: 850px;
-    }
-
-    .intro p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 1.08rem;
-    }
-
-    footer {
-      border-top: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 24px 0 34px;
-      color: var(--muted);
-      font-size: .85rem;
-    }
-
-    @media (max-width: 700px) {
-      .domain { display: none; }
-      main { padding: 60px 0; }
-      .intro { grid-template-columns: 1fr; gap: 18px; }
-      footer { flex-direction: column; }
+    p {
+      margin: 18px 0 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 1rem;
+      color: #666;
     }
   </style>
 </head>
 
 <body>
-  <div class="page">
-    <header>
-      <div class="brand">Gore Street Capital</div>
-      <div class="domain">gorestreetcap.co.uk</div>
-    </header>
-
-    <main>
-      <div class="hero">
-        <div class="kicker">Gore Street Capital</div>
-        <h1>Website coming soon.</h1>
-
-        <div class="rule"></div>
-
-        <div class="intro">
-          <p>
-            This is a temporary holding page for Gore Street Capital.
-          </p>
-          <p>
-            Further information and contact details will be added shortly.
-          </p>
-        </div>
-      </div>
-    </main>
-
-    <footer>
-      <span>© <span id="year"></span> Gore Street Capital</span>
-      <span>gorestreetcap.co.uk</span>
-    </footer>
+  <div class="coming-soon">
+    <h1>Website coming soon.</h1>
+    <p>by Erwann</p>
   </div>
-
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
 </body>
 </html>
