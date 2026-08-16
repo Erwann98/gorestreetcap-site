@@ -3,49 +3,1004 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07100b">
   <meta name="robots" content="noindex, nofollow">
-  <title>Website coming soon</title>
+  <meta name="description" content="A toy battery trading game about timing charge and discharge decisions.">
+  <title>Power Trader</title>
 
   <style>
-    * {
-      box-sizing: border-box;
+    :root{
+      --bg:#06100b;
+      --panel:#0b1811;
+      --panel2:#102219;
+      --line:rgba(255,255,255,.11);
+      --text:#f1fff5;
+      --muted:#83a18d;
+      --green:#79ff9b;
+      --amber:#ffd66b;
+      --red:#ff7373;
+      --blue:#7fb8ff;
     }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-      background: #f4f2ed;
-      color: #171717;
-      font-family: Georgia, "Times New Roman", serif;
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      min-height:100vh;
+      padding:18px;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 50% -20%,rgba(121,255,155,.14),transparent 45rem),
+        var(--bg);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
 
-    .coming-soon {
-      text-align: center;
+    .app{
+      width:min(100%,1080px);
+      margin:0 auto;
     }
 
-    h1 {
-      margin: 0;
-      font-size: clamp(3rem, 9vw, 7rem);
-      font-weight: 400;
-      line-height: 0.95;
-      letter-spacing: -0.05em;
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:20px;
+      margin:8px 2px 16px;
+      color:var(--muted);
+      font-size:.76rem;
+      text-transform:uppercase;
+      letter-spacing:.13em;
     }
 
-    p {
-      margin: 18px 0 0;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 1rem;
-      color: #666;
+    .live{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:var(--green);
+      box-shadow:0 0 18px rgba(121,255,155,.8);
+    }
+
+    .panel{
+      overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:26px;
+      background:linear-gradient(180deg,rgba(255,255,255,.035),transparent),var(--panel);
+      box-shadow:0 30px 90px rgba(0,0,0,.34);
+    }
+
+    header{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:28px;
+      align-items:end;
+      padding:28px 32px 22px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .eyebrow{
+      color:var(--green);
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      font-size:.72rem;
+      font-weight:900;
+      margin-bottom:8px;
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(3.4rem,8vw,6.5rem);
+      line-height:.86;
+      letter-spacing:-.065em;
+    }
+
+    .sub{
+      max-width:680px;
+      margin:16px 0 0;
+      color:var(--muted);
+      font-size:1rem;
+    }
+
+    .profitbox{
+      text-align:right;
+      min-width:180px;
+    }
+
+    .profitbox small{
+      display:block;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      font-size:.68rem;
+    }
+
+    .profit{
+      margin-top:4px;
+      font-size:2.8rem;
+      font-weight:900;
+      letter-spacing:-.055em;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .profit.pos{color:var(--green)}
+    .profit.neg{color:var(--red)}
+
+    .layout{
+      display:grid;
+      grid-template-columns:1.45fr .55fr;
+    }
+
+    .main{
+      padding:26px 28px 30px;
+      border-right:1px solid var(--line);
+    }
+
+    .side{
+      padding:26px 24px;
+      background:rgba(255,255,255,.012);
+    }
+
+    .headline-row{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:20px;
+    }
+
+    .label{
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      font-size:.68rem;
+      font-weight:800;
+    }
+
+    .price{
+      margin-top:4px;
+      font-size:clamp(3.8rem,10vw,6.2rem);
+      line-height:1;
+      font-weight:850;
+      letter-spacing:-.06em;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .unit{
+      color:var(--muted);
+      font-size:1rem;
+      margin-left:8px;
+    }
+
+    .clock{
+      text-align:right;
+    }
+
+    .clock strong{
+      display:block;
+      margin-top:5px;
+      font-size:1.4rem;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .chart-wrap{
+      position:relative;
+      margin:20px 0 14px;
+    }
+
+    canvas{
+      width:100%;
+      height:250px;
+      display:block;
+      border:1px solid var(--line);
+      border-radius:17px;
+      background:#07110b;
+    }
+
+    .chart-key{
+      display:flex;
+      justify-content:space-between;
+      color:#5f7868;
+      font-size:.7rem;
+      margin-top:7px;
+    }
+
+    .forecast{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+      margin:17px 0;
+    }
+
+    .forecast-card{
+      padding:11px 12px;
+      border-radius:13px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.025);
+    }
+
+    .forecast-card span{
+      display:block;
+      color:var(--muted);
+      font-size:.68rem;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .forecast-card strong{
+      display:block;
+      margin-top:3px;
+      font-size:1.05rem;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .event{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:18px;
+      min-height:62px;
+      padding:13px 15px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:rgba(255,255,255,.025);
+    }
+
+    .event strong{
+      display:block;
+      font-size:.94rem;
+    }
+
+    .event span{
+      display:block;
+      margin-top:2px;
+      color:var(--muted);
+      font-size:.8rem;
+    }
+
+    .event-badge{
+      white-space:nowrap;
+      color:var(--amber);
+      font-size:.7rem;
+      font-weight:900;
+      letter-spacing:.1em;
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-top:17px;
+    }
+
+    button{
+      min-height:62px;
+      border:1px solid var(--line);
+      border-radius:15px;
+      color:var(--text);
+      background:var(--panel2);
+      font:inherit;
+      font-weight:900;
+      cursor:pointer;
+      transition:.12s ease;
+      touch-action:manipulation;
+    }
+
+    button:hover{transform:translateY(-1px)}
+    button:active{transform:translateY(1px)}
+
+    button.active{
+      color:#06100b;
+      border-color:transparent;
+      background:var(--green);
+      box-shadow:0 0 28px rgba(121,255,155,.14);
+    }
+
+    #dischargeBtn.active{background:var(--amber)}
+
+    .kbd{
+      margin-top:10px;
+      text-align:center;
+      color:#5f7868;
+      font-size:.74rem;
+    }
+
+    .side-section + .side-section{
+      margin-top:24px;
+      padding-top:21px;
+      border-top:1px solid var(--line);
+    }
+
+    .soc{
+      margin-top:5px;
+      font-size:2.1rem;
+      font-weight:900;
+      letter-spacing:-.04em;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .battery{
+      height:160px;
+      position:relative;
+      margin-top:12px;
+      overflow:hidden;
+      padding:6px;
+      border:2px solid rgba(255,255,255,.56);
+      border-radius:15px;
+      background:#07100b;
+    }
+
+    .battery-fill{
+      position:absolute;
+      left:6px;
+      right:6px;
+      bottom:6px;
+      height:50%;
+      border-radius:8px;
+      background:linear-gradient(180deg,var(--green),#2bce63);
+      transition:height .18s linear;
+    }
+
+    .battery-line{
+      position:absolute;
+      left:0;right:0;
+      top:20%;
+      height:60%;
+      border-top:1px dashed rgba(255,214,107,.35);
+      border-bottom:1px dashed rgba(255,214,107,.35);
+      pointer-events:none;
+    }
+
+    .metrics{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .metric{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      color:var(--muted);
+      font-size:.82rem;
+    }
+
+    .metric strong{
+      color:var(--text);
+      font-variant-numeric:tabular-nums;
+    }
+
+    .status{
+      min-height:46px;
+      margin-top:14px;
+      padding:11px 12px;
+      border-radius:12px;
+      background:rgba(121,255,155,.07);
+      color:var(--green);
+      font-size:.81rem;
+      font-weight:750;
+    }
+
+    footer{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:18px;
+      padding:15px 22px;
+      border-top:1px solid var(--line);
+      color:var(--muted);
+      font-size:.74rem;
+    }
+
+    #restart{
+      min-height:38px;
+      padding:0 14px;
+      border-radius:10px;
+      font-size:.76rem;
+    }
+
+    @media(max-width:800px){
+      header{grid-template-columns:1fr}
+      .profitbox{text-align:left}
+      .layout{grid-template-columns:1fr}
+      .main{border-right:0;border-bottom:1px solid var(--line)}
+      .side{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+      .side-section + .side-section{margin:0;padding:0;border:0}
+    }
+
+    @media(max-width:560px){
+      body{padding:10px}
+      header,.main{padding-left:19px;padding-right:19px}
+      .headline-row{align-items:flex-start}
+      .forecast{grid-template-columns:1fr 1fr}
+      .controls{grid-template-columns:1fr}
+      .side{grid-template-columns:1fr}
+      footer{align-items:flex-start;flex-direction:column}
     }
   </style>
 </head>
 
 <body>
-  <div class="coming-soon">
-    <h1>Website coming soon.</h1>
+  <div class="app">
+    <div class="topbar">
+      <span>Battery market simulator</span>
+      <span class="live"><span class="dot"></span> Market open</span>
+    </div>
+
+    <section class="panel">
+      <header>
+        <div>
+          <div class="eyebrow">Toy energy trading game</div>
+          <h1>Power<br>Trader.</h1>
+          <p class="sub">
+            Buy power when it is cheap. Sell it back when the market spikes.
+            Watch the grid, protect battery capacity, and finish the day with the highest profit.
+          </p>
+        </div>
+
+        <div class="profitbox">
+          <small>Trading P&amp;L</small>
+          <div class="profit pos" id="profit">£0</div>
+        </div>
+      </header>
+
+      <div class="layout">
+        <main class="main">
+          <div class="headline-row">
+            <div>
+              <div class="label">Wholesale power price</div>
+              <div>
+                <span class="price" id="price">£72</span>
+                <span class="unit">/MWh</span>
+              </div>
+            </div>
+
+            <div class="clock">
+              <div class="label">Simulated time</div>
+              <strong id="clock">06:00</strong>
+            </div>
+          </div>
+
+          <div class="chart-wrap">
+            <canvas id="chart" width="760" height="250"></canvas>
+            <div class="chart-key">
+              <span>PAST</span>
+              <span>NOW</span>
+              <span>SHORT-TERM FORECAST →</span>
+            </div>
+          </div>
+
+          <div class="forecast">
+            <div class="forecast-card">
+              <span>+15 min</span>
+              <strong id="f1">£—</strong>
+            </div>
+            <div class="forecast-card">
+              <span>+30 min</span>
+              <strong id="f2">£—</strong>
+            </div>
+            <div class="forecast-card">
+              <span>+45 min</span>
+              <strong id="f3">£—</strong>
+            </div>
+            <div class="forecast-card">
+              <span>+60 min</span>
+              <strong id="f4">£—</strong>
+            </div>
+          </div>
+
+          <div class="event">
+            <div>
+              <strong id="eventTitle">Normal market conditions</strong>
+              <span id="eventText">Price is moving with ordinary supply and demand.</span>
+            </div>
+            <div class="event-badge" id="eventBadge">BALANCED</div>
+          </div>
+
+          <div class="controls">
+            <button id="chargeBtn">CHARGE<br><small>BUY POWER</small></button>
+            <button id="idleBtn" class="active">HOLD<br><small>WAIT</small></button>
+            <button id="dischargeBtn">DISCHARGE<br><small>SELL POWER</small></button>
+          </div>
+
+          <div class="kbd">Keyboard: A = charge · S = hold · D = discharge</div>
+        </main>
+
+        <aside class="side">
+          <div class="side-section">
+            <div class="label">Battery state of charge</div>
+            <div class="soc"><span id="soc">50</span>%</div>
+
+            <div class="battery">
+              <div class="battery-fill" id="batteryFill"></div>
+              <div class="battery-line"></div>
+            </div>
+          </div>
+
+          <div class="side-section">
+            <div class="label">Asset telemetry</div>
+
+            <div class="metrics">
+              <div class="metric"><span>Power</span><strong id="power">0 MW</strong></div>
+              <div class="metric"><span>Energy stored</span><strong id="stored">50 MWh</strong></div>
+              <div class="metric"><span>Cash</span><strong id="cash">£0</strong></div>
+              <div class="metric"><span>Energy bought</span><strong id="bought">0 MWh</strong></div>
+              <div class="metric"><span>Energy sold</span><strong id="sold">0 MWh</strong></div>
+              <div class="metric"><span>Cycle wear</span><strong id="wear">0.0%</strong></div>
+              <div class="metric"><span>Best P&amp;L</span><strong id="best">£0</strong></div>
+            </div>
+
+            <div class="status" id="status">
+              Watch the price curve before committing the battery.
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <footer>
+        <span>
+          100 MWh battery · 50 MW power · 90% round-trip efficiency · small degradation cost per MWh moved
+        </span>
+        <button id="restart">NEW DAY</button>
+      </footer>
+    </section>
   </div>
+
+<script>
+(() => {
+  const CAPACITY = 100;            // MWh
+  const MAX_POWER = 50;            // MW
+  const STEP_HOURS = 0.25;         // 15 simulated minutes per game tick
+  const CHARGE_EFF = Math.sqrt(.90);
+  const DISCHARGE_EFF = Math.sqrt(.90);
+  const DEGRADATION_COST = 2.2;    // £ per MWh throughput
+  const TICKS = 72;                // 18 simulated hours
+  const TICK_MS = 950;
+
+  const el = id => document.getElementById(id);
+
+  const priceEl = el("price");
+  const clockEl = el("clock");
+  const profitEl = el("profit");
+  const socEl = el("soc");
+  const batteryFillEl = el("batteryFill");
+  const powerEl = el("power");
+  const storedEl = el("stored");
+  const cashEl = el("cash");
+  const boughtEl = el("bought");
+  const soldEl = el("sold");
+  const wearEl = el("wear");
+  const bestEl = el("best");
+  const statusEl = el("status");
+  const eventTitleEl = el("eventTitle");
+  const eventTextEl = el("eventText");
+  const eventBadgeEl = el("eventBadge");
+
+  const fEls = [el("f1"), el("f2"), el("f3"), el("f4")];
+
+  const chargeBtn = el("chargeBtn");
+  const idleBtn = el("idleBtn");
+  const dischargeBtn = el("dischargeBtn");
+  const restartBtn = el("restart");
+
+  const canvas = el("chart");
+  const ctx = canvas.getContext("2d");
+
+  let prices = [];
+  let tick = 0;
+  let mode = 0; // -1 charge, 0 hold, +1 discharge
+  let energy = 50;
+  let cash = 0;
+  let bought = 0;
+  let sold = 0;
+  let throughput = 0;
+  let running = true;
+  let timer = null;
+  let currentEvent = null;
+  let eventLeft = 0;
+  let eventPriceEffect = 0;
+
+  let best = Number(localStorage.getItem("powerTraderBest") || 0);
+  bestEl.textContent = formatMoney(best);
+
+  const EVENTS = [
+    {
+      title:"Wind output surges",
+      text:"Extra renewable generation pushes near-term power prices lower.",
+      badge:"SUPPLY +",
+      effect:-46,
+      duration:4
+    },
+    {
+      title:"Evening demand ramp",
+      text:"Demand rises sharply as the system moves into the evening peak.",
+      badge:"DEMAND +",
+      effect:58,
+      duration:5
+    },
+    {
+      title:"Interconnector constraint",
+      text:"Import capacity tightens and local power becomes more valuable.",
+      badge:"IMPORT -",
+      effect:72,
+      duration:3
+    },
+    {
+      title:"Solar output fades",
+      text:"Generation falls faster than expected and prices begin to strengthen.",
+      badge:"SOLAR -",
+      effect:41,
+      duration:4
+    },
+    {
+      title:"Negative-price window",
+      text:"Oversupply sends prices below zero. Charging can get paid.",
+      badge:"PRICE -",
+      effect:-92,
+      duration:3
+    },
+    {
+      title:"System stress",
+      text:"A sudden imbalance causes a short, high-value price spike.",
+      badge:"SCARCITY",
+      effect:125,
+      duration:2
+    }
+  ];
+
+  function formatMoney(n){
+    const sign = n < 0 ? "-" : "";
+    return sign + "£" + Math.abs(Math.round(n)).toLocaleString("en-GB");
+  }
+
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+  function seededNoise(i){
+    return Math.sin(i*1.83)*10 + Math.sin(i*.61+1.7)*8 + Math.sin(i*.21)*6;
+  }
+
+  function basePrice(i){
+    const hour = 6 + i * STEP_HOURS;
+
+    let p = 55;
+    p += 18 * Math.sin((hour-7)/24 * Math.PI*2);
+    p += 42 * Math.exp(-Math.pow((hour-19)/2.2, 2));  // evening peak
+    p -= 25 * Math.exp(-Math.pow((hour-13.5)/2.6, 2)); // midday solar depression
+    p += seededNoise(i);
+
+    return p;
+  }
+
+  function generatePrices(){
+    prices = [];
+    for(let i=0;i<TICKS+6;i++){
+      prices.push(basePrice(i));
+    }
+  }
+
+  function maybeStartEvent(){
+    if(currentEvent || tick < 4 || tick > TICKS-6) return;
+
+    if(Math.random() < .115){
+      currentEvent = EVENTS[Math.floor(Math.random()*EVENTS.length)];
+      eventLeft = currentEvent.duration;
+      eventPriceEffect = currentEvent.effect;
+
+      eventTitleEl.textContent = currentEvent.title;
+      eventTextEl.textContent = currentEvent.text;
+      eventBadgeEl.textContent = currentEvent.badge;
+    }
+  }
+
+  function updateEvent(){
+    if(!currentEvent) return;
+
+    eventLeft--;
+    if(eventLeft <= 0){
+      currentEvent = null;
+      eventPriceEffect = 0;
+      eventTitleEl.textContent = "Normal market conditions";
+      eventTextEl.textContent = "Price is moving with ordinary supply and demand.";
+      eventBadgeEl.textContent = "BALANCED";
+    }
+  }
+
+  function currentPriceAt(i){
+    const base = prices[i] ?? prices[prices.length-1];
+    if(i === tick) return base + eventPriceEffect;
+
+    // Forecast sees some, but not all, of current event effect.
+    if(i > tick && currentEvent){
+      const ahead = i-tick;
+      const fade = clamp(1 - ahead/5, 0, 1);
+      return base + eventPriceEffect * fade * .72;
+    }
+
+    return base;
+  }
+
+  function setMode(next){
+    if(!running) return;
+    mode = next;
+    chargeBtn.classList.toggle("active", mode === -1);
+    idleBtn.classList.toggle("active", mode === 0);
+    dischargeBtn.classList.toggle("active", mode === 1);
+    render();
+  }
+
+  chargeBtn.onclick = () => setMode(-1);
+  idleBtn.onclick = () => setMode(0);
+  dischargeBtn.onclick = () => setMode(1);
+  restartBtn.onclick = reset;
+
+  window.addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if(k === "a") setMode(-1);
+    if(k === "s") setMode(0);
+    if(k === "d") setMode(1);
+  });
+
+  function executeTrade(){
+    const price = currentPriceAt(tick);
+    const intervalEnergy = MAX_POWER * STEP_HOURS; // 12.5 MWh each tick
+
+    if(mode === -1){
+      const room = CAPACITY - energy;
+      const storable = Math.min(room, intervalEnergy * CHARGE_EFF);
+      if(storable > 0){
+        const gridEnergyBought = storable / CHARGE_EFF;
+        const energyCost = gridEnergyBought * price;
+        const wearCost = gridEnergyBought * DEGRADATION_COST;
+
+        energy += storable;
+        cash -= energyCost + wearCost;
+        bought += gridEnergyBought;
+        throughput += gridEnergyBought;
+
+        if(price < 0){
+          statusEl.textContent = "You are being paid to charge. Nice timing.";
+        }else if(price < 45){
+          statusEl.textContent = "Charging into a relatively cheap market.";
+        }else{
+          statusEl.textContent = "Charging at a high price — this may hurt the spread.";
+        }
+      }else{
+        statusEl.textContent = "Battery full. You cannot buy more energy.";
+      }
+    }
+
+    if(mode === 1){
+      const deliverable = Math.min(intervalEnergy, energy * DISCHARGE_EFF);
+      if(deliverable > 0){
+        const energyRemoved = deliverable / DISCHARGE_EFF;
+        const revenue = deliverable * price;
+        const wearCost = energyRemoved * DEGRADATION_COST;
+
+        energy -= energyRemoved;
+        cash += revenue - wearCost;
+        sold += deliverable;
+        throughput += energyRemoved;
+
+        if(price > 120){
+          statusEl.textContent = "Excellent sale into a scarcity price spike.";
+        }else if(price > 80){
+          statusEl.textContent = "Selling into a strong price.";
+        }else{
+          statusEl.textContent = "You sold at a modest price — watch the spread.";
+        }
+      }else{
+        statusEl.textContent = "Battery empty. Nothing left to sell.";
+      }
+    }
+
+    if(mode === 0){
+      const future = [1,2,3,4].map(n => currentPriceAt(tick+n));
+      const maxFuture = Math.max(...future);
+      const minFuture = Math.min(...future);
+
+      if(maxFuture > price + 35){
+        statusEl.textContent = "Forecast suggests a higher price may be coming.";
+      }else if(minFuture < price - 30){
+        statusEl.textContent = "Forecast suggests cheaper charging may be ahead.";
+      }else{
+        statusEl.textContent = "Holding position while the market develops.";
+      }
+    }
+
+    energy = clamp(energy,0,CAPACITY);
+  }
+
+  function step(){
+    if(!running) return;
+
+    maybeStartEvent();
+    executeTrade();
+
+    tick++;
+    updateEvent();
+
+    if(tick >= TICKS){
+      finish();
+      return;
+    }
+
+    render();
+  }
+
+  function finish(){
+    running = false;
+    clearInterval(timer);
+
+    // mark remaining energy to market at final price
+    const finalPrice = currentPriceAt(Math.min(tick, prices.length-1));
+    const liquidationMWh = energy * DISCHARGE_EFF;
+    const liquidation = liquidationMWh * finalPrice;
+    const wearCost = energy * DEGRADATION_COST;
+    cash += liquidation - wearCost;
+    sold += liquidationMWh;
+    throughput += energy;
+    energy = 0;
+
+    if(cash > best){
+      best = Math.round(cash);
+      localStorage.setItem("powerTraderBest", String(best));
+      bestEl.textContent = formatMoney(best);
+      statusEl.textContent = "New best day. Remaining energy sold at the closing price.";
+    }else{
+      statusEl.textContent = "Day complete. Remaining energy sold at the closing price.";
+    }
+
+    mode = 0;
+    render();
+  }
+
+  function reset(){
+    clearInterval(timer);
+
+    generatePrices();
+    tick = 0;
+    mode = 0;
+    energy = 50;
+    cash = 0;
+    bought = 0;
+    sold = 0;
+    throughput = 0;
+    running = true;
+    currentEvent = null;
+    eventLeft = 0;
+    eventPriceEffect = 0;
+
+    eventTitleEl.textContent = "Normal market conditions";
+    eventTextEl.textContent = "Price is moving with ordinary supply and demand.";
+    eventBadgeEl.textContent = "BALANCED";
+
+    setMode(0);
+    render();
+    timer = setInterval(step, TICK_MS);
+  }
+
+  function drawChart(){
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+
+    ctx.strokeStyle = "rgba(255,255,255,.055)";
+    ctx.lineWidth = 1;
+    for(let x=0;x<w;x+=76){
+      ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();
+    }
+    for(let y=0;y<h;y+=50){
+      ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();
+    }
+
+    const start = Math.max(0,tick-18);
+    const end = Math.min(prices.length-1,tick+12);
+    const vals = [];
+    for(let i=start;i<=end;i++) vals.push(currentPriceAt(i));
+
+    let minP = Math.min(...vals,-20);
+    let maxP = Math.max(...vals,140);
+    const pad = Math.max(25,(maxP-minP)*.16);
+    minP -= pad;
+    maxP += pad;
+
+    const xFor = i => ((i-start)/(end-start))*w;
+    const yFor = p => h - ((p-minP)/(maxP-minP))*h;
+
+    // zero line
+    if(minP < 0 && maxP > 0){
+      ctx.strokeStyle = "rgba(255,115,115,.22)";
+      ctx.beginPath();
+      ctx.moveTo(0,yFor(0));
+      ctx.lineTo(w,yFor(0));
+      ctx.stroke();
+    }
+
+    // past line
+    ctx.strokeStyle = "#79ff9b";
+    ctx.lineWidth = 2.6;
+    ctx.beginPath();
+    for(let i=start;i<=tick;i++){
+      const x=xFor(i), y=yFor(currentPriceAt(i));
+      if(i===start) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    // future line
+    ctx.strokeStyle = "rgba(127,184,255,.9)";
+    ctx.setLineDash([7,7]);
+    ctx.beginPath();
+    for(let i=tick;i<=end;i++){
+      const x=xFor(i), y=yFor(currentPriceAt(i));
+      if(i===tick) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // now marker
+    const nx=xFor(tick);
+    ctx.strokeStyle="rgba(255,255,255,.32)";
+    ctx.beginPath();
+    ctx.moveTo(nx,0);
+    ctx.lineTo(nx,h);
+    ctx.stroke();
+
+    ctx.fillStyle="#ffffff";
+    ctx.beginPath();
+    ctx.arc(nx,yFor(currentPriceAt(tick)),4.5,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  function render(){
+    const price = currentPriceAt(Math.min(tick,prices.length-1));
+    priceEl.textContent = formatMoney(price);
+    priceEl.style.color = price < 0 ? "var(--blue)" : price > 120 ? "var(--amber)" : "var(--text)";
+
+    const hourFloat = 6 + tick*STEP_HOURS;
+    const hour = Math.floor(hourFloat)%24;
+    const minute = Math.round((hourFloat-hour)*60);
+    clockEl.textContent = String(hour).padStart(2,"0")+":"+String(minute).padStart(2,"0");
+
+    profitEl.textContent = formatMoney(cash);
+    profitEl.className = "profit " + (cash >= 0 ? "pos" : "neg");
+
+    const soc = (energy/CAPACITY)*100;
+    socEl.textContent = Math.round(soc);
+    batteryFillEl.style.height = `calc(${soc}% - 12px)`;
+
+    const shownPower =
+      mode === -1 ? -MAX_POWER :
+      mode === 1 ? MAX_POWER : 0;
+
+    powerEl.textContent = (shownPower>0?"+":"") + shownPower + " MW";
+    storedEl.textContent = energy.toFixed(1) + " MWh";
+    cashEl.textContent = formatMoney(cash);
+    boughtEl.textContent = bought.toFixed(1) + " MWh";
+    soldEl.textContent = sold.toFixed(1) + " MWh";
+
+    const equivalentCycles = throughput / (2*CAPACITY);
+    const wearPct = equivalentCycles * 0.045;
+    wearEl.textContent = wearPct.toFixed(2) + "%";
+
+    for(let i=0;i<4;i++){
+      const p=currentPriceAt(Math.min(tick+i+1, prices.length-1));
+      fEls[i].textContent = formatMoney(p);
+    }
+
+    chargeBtn.classList.toggle("active", mode===-1);
+    idleBtn.classList.toggle("active", mode===0);
+    dischargeBtn.classList.toggle("active", mode===1);
+
+    drawChart();
+  }
+
+  generatePrices();
+  render();
+  timer = setInterval(step, TICK_MS);
+})();
+</script>
 </body>
 </html>
