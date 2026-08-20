@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GridVault — Battery Infrastructure Market Game</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">BATTERY INFRASTRUCTURE FUND · SINGLE PLAYER · BROWSER EDITION</div>
+      <h1>GridVault</h1>
+    </div>
+    <div class="top-actions">
+      <span class="phase-pill" id="phasePill">SETUP</span>
+      <span class="status" id="status">Configure your asset and open the trading day.</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="panel controls" id="setupPanel">
+        <div class="section-kicker">Mandate</div>
+        <h2>Storage asset</h2>
+        <p class="muted">You control the BESS. Generation, demand, fuel, carbon, outages and network conditions move independently.</p>
+
+        <label>Market node
+          <select id="battery_node">
+            <option>North</option>
+            <option selected>Central</option>
+            <option>South</option>
+          </select>
+        </label>
+        <div class="two-col">
+          <label>Power (MW)<input id="battery_power_mw" type="number" value="100" min="10" max="1000" step="10"></label>
+          <label>Duration (h)<input id="battery_duration_hours" type="number" value="2" min="0.5" max="8" step="0.5"></label>
+        </div>
+        <label>Starting SOC <span id="socLabel">50%</span>
+          <input id="starting_soc_fraction" type="range" min="0.05" max="0.95" value="0.50" step="0.05">
+        </label>
+        <div class="two-col">
+          <label>Round-trip η<input id="round_trip_efficiency" type="number" value="0.88" min="0.60" max="0.99" step="0.01"></label>
+          <label>Degradation £/MWh<input id="degradation_cost_per_mwh" type="number" value="7" min="0" max="100" step="1"></label>
+        </div>
+        <label>Availability contract <span id="capacityLabel">0%</span> of MW
+          <input id="capacity_contract_fraction" type="range" min="0" max="1" value="0" step="0.1">
+        </label>
+        <label>Contract fee £/kW-year<input id="capacity_payment_per_kw_year" type="number" value="45" min="0" max="1000" step="5"></label>
+        <p class="muted mini">Contracted MW earns a daily capacity fee but can be called during system stress; non-delivery is penalised.</p>
+        <label>Scenario seed<input id="seed" type="number" value="7" min="1" max="999999" step="1"></label>
+        <button id="startButton">Open trading day</button>
+        <button class="ghost hidden" id="resumeButton">Resume saved browser day</button>
+        <div class="footnote">v0.5-alpha · 48 half-hours · rolling RT + unit commitment + energy/reserve/dynamic response</div>
+      </section>
+
+      <section class="panel rt-desk hidden" id="rtDesk">
+        <div class="section-kicker">Real-time desk</div>
+        <div class="desk-heading">
+          <div><h2 id="rtTime">—</h2><span id="rtProgress" class="muted">—</span></div>
+          <strong id="indicativePrice">—</strong>
+        </div>
+
+        <div class="brief-grid">
+          <div><span>SOC</span><b id="briefSoc">—</b></div>
+          <div><span>DA position</span><b id="briefDaPosition">—</b></div>
+          <div><span>DA price</span><b id="briefDaPrice">—</b></div>
+          <div><span>Congestion</span><b id="briefCongestion">—</b></div>
+        </div>
+
+        <div class="revision-row"><span>Demand nowcast</span><b id="demandRevision">—</b></div>
+        <div class="revision-row"><span>Renewables nowcast</span><b id="renewRevision">—</b></div>
+        <div class="revision-row"><span>Reserve requirement</span><b id="reserveRequirement">—</b></div>
+        <div class="revision-row"><span>Indicative reserve price</span><b id="reservePrice">—</b></div>
+        <div class="revision-row"><span>Dynamic response award</span><b id="dynamicResponseInfo">—</b></div>
+        <div class="revision-row"><span>DA startup</span><b id="startupInfo">—</b></div>
+        <div class="revision-row"><span>Availability contract</span><b id="capacityInfo">—</b></div>
+
+        <div class="lookahead-box">
+          <div class="lookahead-head"><h3>Rolling RT outlook</h3><span id="lookaheadMeta">4 hours</span></div>
+          <div class="lookahead-strip" id="lookaheadStrip"><div class="lookahead-empty">Awaiting day-ahead clear.</div></div>
+        </div>
+
+        <div class="alerts" id="alerts"><div class="alert low">Awaiting day-ahead clear.</div></div>
+
+        <div class="strategy-box">
+          <h3>Balancing bid</h3>
+          <div class="two-col">
+            <label>Charge ≤ £/MWh<input id="rtChargePrice" type="number" value="35" step="5"></label>
+            <label>Charge MW<input id="rtChargeMw" type="number" value="100" min="0" step="10"></label>
+          </div>
+          <div class="two-col">
+            <label>Discharge ≥ £/MWh<input id="rtDischargePrice" type="number" value="105" step="5"></label>
+            <label>Discharge MW<input id="rtDischargeMw" type="number" value="100" min="0" step="10"></label>
+          </div>
+          <label>Reserve capacity offered <span id="holdbackLabel">0%</span>
+            <input id="rtHoldback" type="range" min="0" max="0.9" value="0" step="0.05">
+          </label>
+          <label>Reserve offer £/MW/h<input id="rtReservePrice" type="number" value="5" min="0" max="5000" step="1"></label>
+        </div>
+        <div class="button-row">
+          <button class="secondary" id="useDaBidButton">Use DA bid</button>
+          <button id="clearPeriodButton">Clear period</button>
+        </div>
+        <button class="ghost" id="autoFinishButton">Settle rest using DA book</button>
+      </section>
+    </aside>
+
+    <section class="content">
+      <section class="phase-banner panel" id="phaseBanner">
+        <div>
+          <span class="section-kicker">Trading day</span>
+          <h2 id="phaseTitle">Asset setup</h2>
+          <p id="phaseText">Choose your battery mandate, then open a market day. You will receive the day-ahead information set before committing a position.</p>
+        </div>
+        <div class="market-clock" id="marketClock">T−1</div>
+      </section>
+
+      <div class="kpis">
+        <article class="kpi"><span>Economic P&amp;L</span><strong id="netPnl">—</strong><small id="pnlSub">cash + terminal inventory mark</small></article>
+        <article class="kpi"><span>Cash settlement</span><strong id="cashPnl">—</strong><small id="cashSub">energy + services + capacity − wear</small></article>
+        <article class="kpi"><span>Equivalent cycles</span><strong id="cycles">—</strong><small id="finalSoc">—</small></article>
+        <article class="kpi"><span>Opportunity capture</span><strong id="capture">—</strong><small id="captureSub">vs perfect-foresight price taker</small></article>
+      </div>
+
+      <div class="grid-two">
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <div><h2>Local market price</h2><p id="priceChartSub">Day-ahead price forecast at your node</p></div>
+            <div class="legend"><i class="dot forecast"></i>Forecast <i class="dot da"></i>DA <i class="dot rt"></i>RT</div>
+          </div>
+          <svg id="priceChart" viewBox="0 0 900 300" preserveAspectRatio="none"></svg>
+        </article>
+
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <div><h2>Battery state</h2><p>DA shadow SOC and realised RT SOC</p></div>
+            <div class="legend"><i class="dot shadow"></i>DA SOC <i class="dot actual"></i>RT SOC</div>
+          </div>
+          <svg id="batteryChart" viewBox="0 0 900 300" preserveAspectRatio="none"></svg>
+        </article>
+      </div>
+
+      <article class="panel intelligence" id="intelligencePanel">
+        <div class="panel-heading">
+          <div><h2>Day-ahead market intelligence</h2><p>Forecasts are information, not outcomes. Actual system conditions remain hidden until real time.</p></div>
+          <div class="market-stats" id="marketStats">Open a trading day</div>
+        </div>
+        <div class="system-grid">
+          <div><span>Carbon</span><strong id="carbonPrice">—</strong></div>
+          <div><span>Gas index</span><strong id="gasIndex">—</strong></div>
+          <div><span>Forecast price range</span><strong id="forecastRange">—</strong></div>
+          <div><span>Congestion watch</span><strong id="congestionWatch">—</strong></div>
+        </div>
+        <div class="network">
+          <div class="node north">NORTH<small>wind · nuclear</small></div>
+          <div class="line l1"><span>N–C</span></div>
+          <div class="node central">CENTRAL<small>thermal · BESS</small></div>
+          <div class="line l2"><span>C–S</span></div>
+          <div class="node south">SOUTH<small>solar · thermal</small></div>
+        </div>
+        <div class="known-events" id="knownEvents"><div class="known-event neutral">No market notices loaded.</div></div>
+      </article>
+
+      <article class="panel bid-panel hidden" id="bidPanel">
+        <div class="panel-heading sticky-heading">
+          <div>
+            <h2>48-period day-ahead bid book</h2>
+            <p>Bid energy, upward operating reserve and Dynamic Response. Dynamic Response clears in a separate availability auction, then locks symmetric inverter/SOC headroom for the period.</p>
+          </div>
+          <div class="inline-actions">
+            <button class="ghost compact" id="autoBidButton">Auto-fill baseline</button>
+            <button class="compact" id="submitDaButton">Submit &amp; lock DA book</button>
+          </div>
+        </div>
+        <div class="table-wrap bid-wrap">
+          <table class="bid-table">
+            <thead><tr><th>Time</th><th>Price fcst</th><th>Dyn ref £</th><th>Demand</th><th>Renewables</th><th>Grid risk</th><th>Charge ≤</th><th>Charge MW</th><th>Discharge ≥</th><th>Discharge MW</th><th>Reserve %</th><th>Reserve £</th><th>Dyn %</th><th>Dyn £</th></tr></thead>
+            <tbody id="bidRows"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="panel da-panel hidden" id="daPanel">
+        <div class="panel-heading"><div><h2>Locked day-ahead position</h2><p>Your financial schedule is fixed. Physical dispatch now happens in real time.</p></div><div id="daSummary" class="market-stats">—</div></div>
+        <div class="table-wrap short-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>DA price</th><th>Charge</th><th>Discharge</th><th>Net</th><th>Shadow SOC</th><th>Startups</th><th>BESS reserve</th><th>Reserve req.</th><th>Reserve £/MW/h</th><th>Dyn MW</th><th>Dyn £/MW/h</th></tr></thead>
+            <tbody id="daRows"></tbody>
+          </table>
+        </div>
+      </article>
+
+      <div class="grid-two lower hidden" id="resultPanels">
+        <article class="panel result-card">
+          <div class="panel-heading"><div><h2>Performance attribution</h2><p>Where the day's P&amp;L came from.</p></div></div>
+          <div class="attribution" id="attribution"></div>
+        </article>
+        <article class="panel result-card">
+          <div class="panel-heading"><div><h2>Investment committee scorecard</h2><p>Operating performance relative to an informed benchmark.</p></div></div>
+          <div class="scorecard" id="scorecard"></div>
+        </article>
+      </div>
+
+      <article class="panel table-panel">
+        <div class="panel-heading"><div><h2>Real-time settlement tape</h2><p>Only cleared periods are revealed. Each result reflects realised demand, renewables, outages and network constraints.</p></div></div>
+        <div class="table-wrap settlement-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>DA £/MWh</th><th>RT £/MWh</th><th>Reserve £/MW/h</th><th>Dynamic response</th><th>Physical dispatch</th><th>SOC</th><th>DA settle</th><th>RT dev.</th><th>Degrad.</th><th>Net</th><th>Network</th></tr></thead>
+            <tbody id="periodRows"><tr><td colspan="12" class="empty">No real-time periods have cleared.</td></tr></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="./browser-api.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
